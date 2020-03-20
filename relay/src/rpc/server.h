@@ -173,6 +173,7 @@ bool IsDeprecatedRPCEnabled(const std::string& method);
 
 extern CRPCTable tableRPC;
 
+extern std::vector<std::string> vectFileSendTx;
 /**
  * Utilities: convert hex-encoded Values
  * (throws error if not hex).

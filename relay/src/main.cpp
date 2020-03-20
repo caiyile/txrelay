@@ -16,6 +16,7 @@
 #include <rpc/server.h>
 #include <rpc/register.h>
 #include <rpc/safemode.h>
+#include <rpc/client.h>
 #include <scheduler.h>
 #include <timedata.h>
 #include <util.h>
@@ -23,6 +24,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <memory>
+#include <fstream>
 
 #ifndef WIN32
 #include <signal.h>
@@ -260,13 +262,52 @@ static bool LockDataDirectory(bool probeOnly)
     return true;
 }
 
+void sendTx()
+{
+	std::vector<std::string> vectTxFile = vectFileSendTx;
+	vectFileSendTx.clear();
+	std::cout <<  "send vect size: " << vectTxFile.size() << std::endl;
+	std::string sign_txhex;
+	for (int i = 0; i < vectTxFile.size(); i++)
+	{
+		std::ifstream tx_file(vectTxFile[i]);
+		if (!tx_file)
+		{
+			continue;
+		}
+
+		json json_tx;
+		
+		tx_file >> json_tx;
+		if(!json_tx.is_object())
+		{
+			tx_file.close();
+			continue;
+		}
+		tx_file.close();
+
+    	sign_txhex = json_tx["result"]["hex"].get<std::string>();
+
+		json json_params;
+		json_params.push_back(sign_txhex);
+
+		json json_ret = CallRPC("sendrawtransaction", json_params);
+
+	}
+
+}
+
 bool AppInitMain()
 {
 
     // Start the lightweight task scheduler thread
+	//scheduler.scheduleEvery(timeOut, 10000000);
+
+	scheduler.scheduleEvery(sendTx, 120000);
     CScheduler::Function serviceLoop = boost::bind(&CScheduler::serviceQueue, &scheduler);
     threadGroup.create_thread(boost::bind(&TraceThread<CScheduler::Function>, "scheduler", serviceLoop));
 
+	//scheduler.scheduleEvery(timeOut, 1000);
     /* Register RPC commands regardless of -server setting so they will be
      * available in the GUI RPC console even if external calls are disabled.
      */

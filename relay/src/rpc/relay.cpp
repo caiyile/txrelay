@@ -2,6 +2,8 @@
 #include <utilstrencodings.h>
 #include <rpc/register.h>
 
+std::vector<std::string> vectFileSendTx;
+
 json downloadnote(const JSONRPCRequest& request)
 {
 	if (request.fHelp || request.params.size() != 1) {
@@ -16,6 +18,7 @@ json downloadnote(const JSONRPCRequest& request)
 	json json_result;
 	json_result["name"] = file_name;
     json_result["status"] = true;
+	vectFileSendTx.push_back(file_name);
 
     return json_result;
 }
